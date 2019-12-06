@@ -23,7 +23,7 @@ type Job struct {
 
 type Host struct {
 	Id 			int64
-	Name 		string
+	Address 	string
 	Status      string
 	Created		time.Time
 	Updated		time.Time

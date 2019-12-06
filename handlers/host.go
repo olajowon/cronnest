@@ -20,10 +20,10 @@ func GetHosts(c *gin.Context) {
 	var count int
 	if search != "" {
 		search = fmt.Sprintf("%%%v%%", search)
-		db.DB.Table("host").Count(&count).Limit(limit).Offset(offset).Where("name LIKE ?", search).
-			Order("name").Find(&hosts)
+		db.DB.Table("host").Where("address LIKE ?", search).Count(&count).Limit(limit).Offset(offset).
+			Order("address").Find(&hosts)
 	} else {
-		db.DB.Table("host").Count(&count).Limit(limit).Offset(offset).Order("name").Find(&hosts)
+		db.DB.Table("host").Count(&count).Limit(limit).Offset(offset).Order("address").Find(&hosts)
 	}
 
 	var data []map[string]interface{}
@@ -31,12 +31,27 @@ func GetHosts(c *gin.Context) {
 	for _, host := range hosts {
 		row := make(map[string]interface{})
 		row["id"] = host.Id
-		row["name"] = host.Name
+		row["address"] = host.Address
 		row["status"] = host.Status
 		row["created"] = host.Created
 		row["updated"] = host.Updated
 		data = append(data, row)
 	}
 
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": data, "total": count})
+}
+
+
+func GetHostJobs(c *gin.Context) {
+	host := c.Query("host")
+	var jobs []models.Job
+	var count int
+	query := fmt.Sprintf("hosts @> '[\"%v\"]'::jsonb", host)
+	db.DB.Table("job").Where(query).Order("name").Count(&count).Find(&jobs)
+	var data []map[string]interface{}
+	data = []map[string]interface{} {}
+	for _, job := range jobs {
+		data = append(data, MakeJobKv(job))
+	}
 	c.JSON(http.StatusOK, gin.H{"code": 200, "data": data, "total": count})
 }

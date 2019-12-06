@@ -15,7 +15,9 @@ func InitRouter() *gin.Engine {
 		apiGroup.GET("/jobs/", handlers.GetJobs)
 		apiGroup.POST("/jobs/", handlers.AddJob)
 		apiGroup.PUT("/jobs/:pk/", handlers.UpdateJob)
+		apiGroup.DELETE("/jobs/:pk/", handlers.DeleteJob)
 		apiGroup.GET("/hosts/", handlers.GetHosts)
+		apiGroup.GET("/host_jobs/", handlers.GetHostJobs)
 	}
 
 	return router

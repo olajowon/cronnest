@@ -57,15 +57,15 @@
                         <option v-for="size, idx in jobsTable.pageSizes" :key="idx" :value="size">${size}条/页</option>
                     </select>
                     <ul class="pagination pagination-sm">
-                        <li v-if="jobsTable.params.page!=1"><a href="#" @click="jobsTable.params.page=1; href()"><i class="fa fa-angle-double-left fa-fw"></i></a></li>
-                        <li v-else class="disabled"><a href="#"><i class="fa fa-angle-double-left fa-fw"></i></a></li>
-                        <li v-if="jobsTable.params.page!=1"><a href="#" @click="jobsTable.params.page=Number(jobsTable.params.page)-1; href()"><i class="fa fa-angle-left fa-fw"></i></a></li>
-                        <li v-else class="disabled"><a href="#"><i class="fa fa-angle-left fa-fw"></i></a></li>
+                        <li v-if="jobsTable.params.page!=1"><a href="#" @click="jobsTable.params.page=1; href()"><i class="glyphicon glyphicon-step-backward"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-backward"></i></a></li>
+                        <li v-if="jobsTable.params.page!=1"><a href="#" @click="jobsTable.params.page=Number(jobsTable.params.page)-1; href()"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
                         <li class="active"><a href="#">${jobsTable.params.page}</a></li>
-                        <li v-if="jobsTable.params.page!=Math.floor(jobsTable.total/Number(jobsTable.params.pageSize))+1"><a href="#" @click="jobsTable.params.page=Number(jobsTable.params.page)+1; href()"><i class="fa fa-angle-right fa-fw"></i></a></li>
-                        <li v-else class="disabled"><a href="#"><i class="fa fa-angle-right fa-fw"></i></a></li>
-                        <li v-if="jobsTable.params.page!=Math.floor(jobsTable.total/Number(jobsTable.params.pageSize))+1"><a href="#" @click="jobsTable.params.page=Math.floor(jobsTable.total/Number(jobsTable.params.pageSize))+1; href()"><i class="fa fa-angle-double-right fa-fw"></i></a></li>
-                        <li v-else class="disabled"><a href="#"><i class="fa fa-angle-double-right fa-fw"></i></a></li>
+                        <li v-if="jobsTable.params.page!=Math.ceil(jobsTable.total/Number(jobsTable.params.pageSize))"><a href="#" @click="jobsTable.params.page=Number(jobsTable.params.page)+1; href()"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
+                        <li v-if="jobsTable.params.page!=Math.ceil(jobsTable.total/Number(jobsTable.params.pageSize))"><a href="#" @click="jobsTable.params.page=Math.ceil(jobsTable.total/Number(jobsTable.params.pageSize)); href()"><i class="glyphicon glyphicon-step-forward"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-forward"></i></a></li>
                     </ul>
                 </div>
             </div>
@@ -88,8 +88,8 @@
                     <a href="#">执行记录</a>
                 </li>
             </ul>
-            <ul v-else class="nav nav-tabs job-manage-nav">
-                <li :class="currAction=='add' ? 'active' : ''" @click="currAction='add'">
+            <ul v-if="currAction=='add'" class="nav nav-tabs job-manage-nav">
+                <li class="active" @click="currAction='add'">
                     <a href="#">添加</a>
                 </li>
             </ul>
@@ -124,6 +124,8 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- job 添加 & 编辑 -->
             <div v-if="currAction=='update' || currAction=='add'" class="job-manage-body">
                 <form role="form" v-model="addOrUpdateForm">
                     <div class="form-group">
@@ -177,6 +179,14 @@
                         <button @click="submitAddOrUpdate(currAction)" type="button" class="btn btn-default">提交</button>
                     </div>
                 </form>
+            </div>
+
+            <!-- job 删除 -->
+            <div v-if="currAction=='delete'" class="job-manage-body">
+                <p class="text-danger job-delete-alert">
+                    删除任务不可恢复，确定删除 ${currJob.name} ？
+                </p>
+                <button class="btn btn-danger btn-sm" @click="submitDelete">删除</button>
             </div>
         </div>
 
@@ -303,21 +313,54 @@
                 this.submitting = "正在提交任务...";
                 req(uri, data)
                 .then(function(resp){
-                    _this.submitting = null;
                     _this.currJob = resp.data.data;
                     if (action == 'add') {
                         _this.jobsTable.data.unshift(resp.data.data);
+                        _this.jobsTable.total += 1;
                         _this.currJobRowIdx = 0;
                     } else {
                         _this.$set(_this.jobsTable.data, _this.currJobRowIdx, resp.data.data)
                     }
+                    toastr.success((action == 'add' ? '添加' : '编辑') + '任务成功');
+                    _this.submitting = null;
                 })
                 .catch(function(error){
                     _this.submitting = null;
-                    if (error.response && error.response.status == 400) {
-                        _this.addOrUpdateFormError = error.response.data.error;
-                    };
+                    console.log(error)
+                    console.log(error.response)
+                    if (error.response && error.response.data) {
+                        console.log("he")
+                        toastr.error(error.response.data.msg)
+                        if (error.response.status == 400) {
+                            _this.addOrUpdateFormError = error.response.data.error;
+                        }
+                    } else {
+                        toastr.error(error)
+                    }
                 });
+            },
+            submitDelete: function () {
+                this.submitting = "正在删除任务..."
+                let uri = "/api/jobs/" + this.currJob.id + "/"
+                let _this = this;
+                axios.delete(uri)
+                .then(function(resp) {
+                    _this.jobsTable.data.splice(_this.currJobRowIdx, 1);
+                    _this.jobsTable.total -= 1;
+                    _this.currJob = null;
+                    _this.currJobRowIdx = null;
+                    _this.currAction = null;
+                    _this.submitting = null;
+                    toastr.success('删除任务成功');
+                })
+                .catch(function(error) {
+                    _this.submitting = null;
+                    if (error.response && error.response.data) {
+                        toastr.error(error.response.data.msg)
+                    } else {
+                        toastr.error(error)
+                    }
+                })
             },
             getQueryVariable: function (variable) {
                 let query = window.location.search.substring(1);
@@ -407,6 +450,12 @@
 
     .job-pagination > div:last-child > ul {
         float: right;
+    }
+
+    .job-delete-alert {
+        font-size: 14px;
+        margin-bottom: 30px;
+        margin-top: 10px;
     }
 </style>
 </html>

@@ -6,8 +6,102 @@
 <body>
 {{template "nav"}}
 
-<div id="app" class="container">
-    <div><p>${ message }</p></div>
+<div id="app">
+    <div class="col-sm-5">
+        <div class="host-list-head">
+            <div class="input-group search-host-inputgroup">
+                <input type="text" class="form-control input-sm" placeholder="模糊搜索主机地址" v-model="search">
+                <span class="input-group-btn">
+                        <button class="btn btn-default btn-sm" type="button"
+                                @click="hostsTable.params.search=search; hostsTable.params.page=1; href()">搜索</button>
+                    </span>
+            </div>
+        </div>
+        <div class="panel panel-default host-list-panel">
+            <div class="panel-body">
+                <table class="table table-responsive">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>地址</th>
+                        <th>状态</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="(row, idx) in hostsTable.data"
+                        :key="idx"
+                        @click="rowClick(row, idx)"
+                        :class="currHost && currHost.id == row.id ? 'success' : ''"
+                    >
+                        <td>${idx + 1}</td>
+                        <td>${row.address}</td>
+                        <td>${row.status}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="host-pagination">
+            <div>
+                当前第${hostsTable.params.page}页，${hostsTable.data.length}条；共${Math.floor(hostsTable.total/Number(hostsTable.params.pageSize))+1}页，${hostsTable.total}条
+            </div>
+            <div>
+                <select class="form-control input-sm" v-model="hostsTable.params.pageSize" @change="hostsTable.params.page=1; href()">
+                    <option v-for="size, idx in hostsTable.pageSizes" :key="idx" :value="size">${size}条/页</option>
+                </select>
+                <ul class="pagination pagination-sm">
+                    <li v-if="hostsTable.params.page!=1"><a href="#" @click="hostsTable.params.page=1; href()"><i class="glyphicon glyphicon-step-backward"></i></a></li>
+                    <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-backward"></i></a></li>
+                    <li v-if="hostsTable.params.page!=1"><a href="#" @click="hostsTable.params.page=Number(hostsTable.params.page)-1; href()"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
+                    <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
+                    <li class="active"><a href="#">${hostsTable.params.page}</a></li>
+                    <li v-if="hostsTable.params.page!=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize))"><a href="#" @click="hostsTable.params.page=Number(hostsTable.params.page)+1; href()"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
+                    <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
+                    <li v-if="hostsTable.params.page!=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize))"><a href="#" @click="hostsTable.params.page=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize)); href()"><i class="glyphicon glyphicon-step-forward"></i></a></li>
+                    <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-forward"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-7">
+        <ul v-if="currHost" class="nav nav-tabs host-manage-nav">
+            <li :class="currAction=='info' ? 'active' : ''" @click="currAction='info'">
+                <a href="#">信息</a>
+            </li>
+        </ul>
+
+        <div v-if="currAction=='info'" class="host-manage-body">
+            <table class="table table-bordered">
+                <thead>
+                <tr><th colspan="2">基本信息</th></tr>
+                </thead>
+                <tbody>
+                <tr><td style="width: 90px">地址</td><td>${currHost.address}</td></tr>
+                <tr><td>状态</td><td>${currHost.status}</td></tr>
+                <tr><td>创建时间</td><td>${currHost.created}</td></tr>
+                <tr><td>最近更新时间</td><td>${currHost.updated}</td></tr>
+                </tbody>
+            </table>
+            <table class="table table-bordered">
+                <thead>
+                <tr><th colspan="6">计划任务（${currHostJobsTable.total}）</th></tr>
+                <tr><th>#</th><th>名称</th><th>状态</th><th>描述</th><th>调度周期</th><th>创建时间</th></tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(row, idx) in currHostJobsTable.data"
+                        :key="idx"
+                    >
+                        <td>${idx + 1}</td>
+                        <td>${row.name}</td>
+                        <td>${row.status}</td>
+                        <td>${row.description}</td>
+                        <td>${row.spec}</td>
+                        <td>${row.created}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 {{template "footer"}}
@@ -17,8 +111,157 @@
         el: '#app',
         delimiters: ['${', '}'],
         data: {
-            message: 'host'
+            hostsTable: {
+                params: {
+                    search: "",
+                    page: 1,
+                    pageSize: 10,
+                },
+                data: [],
+                total: 0,
+                pageSizes: [5, 10, 20, 50, 100]
+            },
+            currHost: null,
+            currHostRowIdx: null,
+            currAction: null,
+            currHostJobsTable: {
+                data: [],
+                total: 0
+            },
+            search: "",
+        },
+
+        mounted: function () {
+            this.setParams();
+            this.getHosts();
+        },
+        methods: {
+            href: function() {
+                let params = [];
+                for (let k in this.hostsTable.params) {
+                    if (this.hostsTable.params[k]) {
+                        params.push(k+"="+this.hostsTable.params[k])
+                    }
+                }
+                window.location.href = "/html/hosts/?" + params.join("&")
+            },
+
+            setParams: function() {
+                for (let k in this.hostsTable.params) {
+                    let v = this.getQueryVariable(k);
+                    if (v) {
+                        this.hostsTable.params[k] = v;
+                    }
+                }
+            },
+
+            getHosts: function () {
+                console.log("getHosts")
+                let _this = this;
+                axios.get('/api/hosts/', {params: this.hostsTable.params})
+                .then(function(resp){
+                    _this.hostsTable.data = resp.data.data;
+                    _this.hostsTable.total = resp.data.total;
+                })
+            },
+
+            getHostJobs: function () {
+                let params = {host: this.currHost.address};
+                let _this = this;
+                axios.get('/api/host_jobs/', {params: params})
+                .then(function(resp){
+                    _this.currHostJobsTable.data = resp.data.data;
+                    _this.currHostJobsTable.total = resp.data.total;
+                })
+            },
+
+            rowClick: function (row, rowIdx) {
+                this.currHost = row;
+                this.currHostRowIdx = rowIdx;
+                this.currAction = 'info';
+                this.getHostJobs();
+            },
+
+            getQueryVariable: function (variable) {
+                let query = window.location.search.substring(1);
+                let vars = query.split("&");
+                for (let i=0;i<vars.length;i++) {
+                    let pair = vars[i].split("=");
+                    if(pair[0] == variable){return pair[1];}
+                }
+                return false;
+            }
         }
     })
 </script>
+<style>
+    #app div:first-child {
+        overflow: auto;
+    }
+
+    #app table:first-child td, #app table:first-child th {
+        word-break: keep-all;
+        white-space:nowrap;
+    }
+
+    #app div:first-child tbody tr {
+        cursor: pointer;
+    }
+
+    #app > div {
+        height: calc(100% - 15px);
+    }
+
+    .host-manage-nav {
+        margin-bottom: 10px;
+    }
+
+    .host-manage-body {
+        height: calc(100% - 50px);
+        overflow: auto;
+        padding: 5px;
+    }
+
+    .search-host-inputgroup {
+        width: 50%; float: left
+    }
+
+    .host-list-head {
+        margin-bottom: 10px
+    }
+
+    .host-list-panel {
+        max-height: calc(100% - 90px); overflow: auto
+    }
+
+    #submittingModal > div > div {
+        font-size: 20px;
+        color: #fff;
+        text-align: center;
+        margin-top: 100pt
+    }
+
+    .pagination {
+        margin: 0px !important;
+    }
+
+    .host-pagination > div:first-child {
+        float: left;
+    }
+
+    .host-pagination > div:last-child {
+        float: right;
+    }
+
+    .host-pagination > div:last-child > select {
+        float: left;
+        width: 70px !important;
+        margin-right: 5px;
+    }
+
+    .host-pagination > div:last-child > ul {
+        float: right;
+    }
+
+</style>
 </html>
