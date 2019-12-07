@@ -13,14 +13,14 @@ import (
 )
 
 type JobReqData struct {
-	Name 			string
-	Status 			string
-	Description 	string
-	Mailto			string
-	Spec			string
-	Content			string
-	Hosts			[]string
-	Sysuser			string
+	Name 		string
+	Status 		string
+	Description	string
+	Mailto		string
+	Spec		string
+	Content		string
+	Hosts		[]string
+	Sysuser		string
 }
 
 func GetJobs(c *gin.Context) {
@@ -49,20 +49,21 @@ func GetJobs(c *gin.Context) {
 }
 
 
-func AddJob(c *gin.Context) {
+func CreateJob(c *gin.Context) {
+	user, _, _ := c.Request.BasicAuth()
 	rawData, _ := c.GetRawData()
-	data := JobReqData{}
-	json.Unmarshal(rawData, &data)
-	error := cleanedJobData(&data, 0)
+	reqData := JobReqData{}
+	json.Unmarshal(rawData, &reqData)
+	error := cleanedJobData(&reqData, 0)
 	if len(error) > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 400,"msg": "Bad POST data", "error": error})
 		return
 	}
 
 	transaction := db.DB.Begin()
-	hosts, _ := json.Marshal(data.Hosts)
-	job := models.Job{Name:data.Name, Status:data.Status, Description:data.Description, Mailto:data.Mailto,
-		Spec:data.Spec, Content: data.Content, Hosts:hosts, Sysuser:data.Sysuser,
+	hosts, _ := json.Marshal(reqData.Hosts)
+	job := models.Job{Name:reqData.Name, Status:reqData.Status, Description:reqData.Description, Mailto:reqData.Mailto,
+		Spec:reqData.Spec, Content: reqData.Content, Hosts:hosts, Sysuser:reqData.Sysuser,
 		Created:time.Now(), Updated:time.Now()}
 	result := transaction.Table("job").Create(&job)
 	if result.Error != nil {
@@ -71,33 +72,60 @@ func AddJob(c *gin.Context) {
 		return
 	}
 
-	for _, name := range data.Hosts {
+	for _, name := range reqData.Hosts {
 		host := models.Host{}
 		transaction.Table("host").Where("name = ?", name).First(&host)
 		if host.Id == 0 || host.Status != "enabled" {
+			var operationType string
 			if host.Id == 0 {
 				host.Address = name
 				host.Status = "enabled"
 				host.Created = time.Now()
 				host.Updated = time.Now()
 				result = transaction.Table("host").Create(&host)
+				operationType = "create"
 			} else {
 				host.Status = "enabled"
 				host.Updated = time.Now()
 				result = transaction.Table("host").Save(&host)
+				operationType = "update"
 			}
 			if result.Error != nil {
 				transaction.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+				c.JSON(http.StatusInternalServerError,
+					gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+				return
+			}
+
+			hostData := MakeHostKv(host)
+			jsonHostData, _ := json.Marshal(hostData)
+			operRecord := models.OperationRecord{ResourceType:"host", ResourceId:host.Id, OperationType: operationType,
+				Data:jsonHostData, User: user, Created: time.Now()}
+			if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
+				transaction.Rollback()
+				c.JSON(http.StatusInternalServerError,
+					gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
 				return
 			}
 		}
 	}
+
+	data := MakeJobKv(job)
+	jsonData, _ := json.Marshal(data)
+	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:job.Id, OperationType: "create",
+		Data:jsonData, User: user, Created: time.Now()}
+	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
+		transaction.Rollback()
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+		return
+	}
 	transaction.Commit()
-	c.JSON(http.StatusOK, gin.H{"code": 200, "data": MakeJobKv(job)})
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": data})
 }
 
 func UpdateJob(c *gin.Context) {
+	user, _, _ := c.Request.BasicAuth()
 	pk := c.Param("pk")
 	updateJob := models.Job{}
 	db.DB.Table("job").Where("id = ?", pk).First(&updateJob)
@@ -107,24 +135,24 @@ func UpdateJob(c *gin.Context) {
 	}
 
 	rawData, _ := c.GetRawData()
-	data := JobReqData{}
-	json.Unmarshal(rawData, &data)
-	error := cleanedJobData(&data, updateJob.Id)
+	reqData := JobReqData{}
+	json.Unmarshal(rawData, &reqData)
+	error := cleanedJobData(&reqData, updateJob.Id)
 	if len(error) > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "msg": "Bad PUT data", "error": error})
 		return
 	}
 
 	transaction := db.DB.Begin()
-	hosts, _ := json.Marshal(data.Hosts)
-	updateJob.Name = data.Name
-	updateJob.Status = data.Status
-	updateJob.Description = data.Description
-	updateJob.Mailto = data.Mailto
-	updateJob.Spec = data.Spec
-	updateJob.Content = data.Content
+	hosts, _ := json.Marshal(reqData.Hosts)
+	updateJob.Name = reqData.Name
+	updateJob.Status = reqData.Status
+	updateJob.Description = reqData.Description
+	updateJob.Mailto = reqData.Mailto
+	updateJob.Spec = reqData.Spec
+	updateJob.Content = reqData.Content
 	updateJob.Hosts = hosts
-	updateJob.Sysuser = data.Sysuser
+	updateJob.Sysuser = reqData.Sysuser
 	updateJob.Updated = time.Now()
 	result := transaction.Table("job").Save(&updateJob)
 	if result.Error != nil {
@@ -133,52 +161,93 @@ func UpdateJob(c *gin.Context) {
 		return
 	}
 
-	for _, address := range data.Hosts {
+	for _, address := range reqData.Hosts {
 		host := models.Host{}
 		transaction.Table("host").Where("address = ?", address).First(&host)
 		if host.Id == 0 || host.Status != "enabled" {
+			var operationType string
 			if host.Id == 0 {
 				host.Address = address
 				host.Status = "enabled"
 				host.Created = time.Now()
 				host.Updated = time.Now()
 				result = transaction.Table("host").Create(&host)
+				operationType = "create"
 			} else {
 				host.Status = "enabled"
 				host.Updated = time.Now()
 				result = transaction.Table("host").Save(&host)
+				operationType = "update"
 			}
 			if result.Error != nil {
 				transaction.Rollback()
-				c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+				c.JSON(http.StatusInternalServerError,
+					gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+				return
+			}
+
+			hostData := MakeHostKv(host)
+			jsonHostData, _ := json.Marshal(hostData)
+			operRecord := models.OperationRecord{ResourceType:"host", ResourceId:host.Id, OperationType: operationType,
+				Data:jsonHostData, User: user, Created: time.Now()}
+			if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
+				transaction.Rollback()
+				c.JSON(http.StatusInternalServerError,
+					gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
 				return
 			}
 		}
 	}
 
+	data := MakeJobKv(updateJob)
+	jsonData, _ := json.Marshal(data)
+	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:updateJob.Id, OperationType: "update",
+		Data:jsonData, User: user, Created: time.Now()}
+	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
+		transaction.Rollback()
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+		return
+	}
 	transaction.Commit()
-	c.JSON(http.StatusOK, gin.H{"code": 200, "data": MakeJobKv(updateJob)})
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": data})
 }
 
 func DeleteJob(c *gin.Context) {
+	user, _, _ := c.Request.BasicAuth()
 	pk := c.Param("pk")
 	deleteJob := models.Job{}
 	db.DB.Table("job").Where("id = ?", pk).First(&deleteJob)
 	if deleteJob.Id == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"code": 404, "msg": "Job not found"})
-	} else {
-		result := db.DB.Table("job").Delete(&deleteJob)
-		if result.Error != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"code": 200, "data": gin.H{"id": deleteJob.Id}})
-		}
+		return
 	}
+
+	transaction := db.DB.Begin()
+	result := db.DB.Table("job").Delete(&deleteJob)
+	if result.Error != nil {
+		transaction.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+		return
+	}
+
+	data := MakeJobKv(deleteJob)
+	jsonData, _ := json.Marshal(data)
+	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:deleteJob.Id, OperationType: "delete",
+		Data:jsonData, User: user, Created: time.Now()}
+	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
+		transaction.Rollback()
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+		return
+	}
+
+	transaction.Commit()
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": data})
 }
 
 func cleanedJobData(data *JobReqData, updateJobId int64) map[string]string {
 	error := make(map[string]string)
-	fmt.Println(updateJobId)
 	if data.Name == "" {
 		error["name"] = "任务名称是必填项"
 	} else {
@@ -204,7 +273,8 @@ func cleanedJobData(data *JobReqData, updateJobId int64) map[string]string {
 		if updateJobId == 0 {
 			db.DB.Table("job").Where("description = ?", data.Description).First(&job)
 		} else {
-			db.DB.Table("job").Where("description = ? AND id <> ?", data.Description, updateJobId).First(&job)
+			db.DB.Table("job").Where("description = ? AND id <> ?",
+				data.Description, updateJobId).First(&job)
 		}
 		if job.Id != 0 {
 			error["description"] = fmt.Sprintf("任务描述[%v]已存在", data.Description)

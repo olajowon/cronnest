@@ -4,113 +4,116 @@
 {{template "head"}}
 </head>
 <body>
-{{template "nav"}}
-
 <div id="app">
-    <div class="col-sm-5">
-        <div class="host-list-head">
-            <div class="input-group search-host-inputgroup">
-                <input type="text" class="form-control input-sm" placeholder="模糊搜索主机地址" v-model="search">
-                <span class="input-group-btn">
-                        <button class="btn btn-default btn-sm" type="button"
-                                @click="hostsTable.params.search=search; hostsTable.params.page=1; href()">搜索</button>
-                    </span>
+    {{template "nav"}}
+
+    <div id="page-content">
+        <div class="col-sm-5">
+            <div class="host-list-head">
+                <div class="input-group search-host-inputgroup">
+                    <input type="text" class="form-control input-sm" placeholder="模糊搜索主机地址" v-model="search">
+                    <span class="input-group-btn">
+                            <button class="btn btn-default btn-sm" type="button"
+                                    @click="hostsTable.params.search=search; hostsTable.params.page=1; href()">搜索</button>
+                        </span>
+                </div>
+            </div>
+            <div class="panel panel-default host-list-panel">
+                <div class="panel-body">
+                    <table class="table table-responsive">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>地址</th>
+                            <th>状态</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(row, idx) in hostsTable.data"
+                            :key="idx"
+                            @click="rowClick(row, idx)"
+                            :class="currHost && currHost.id == row.id ? 'success' : ''"
+                        >
+                            <td>${idx + 1}</td>
+                            <td>${row.address}</td>
+                            <td>${row.status}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="host-pagination">
+                <div>
+                    当前第${hostsTable.params.page}页，${hostsTable.data.length}条；共${Math.floor(hostsTable.total/Number(hostsTable.params.pageSize))+1}页，${hostsTable.total}条
+                </div>
+                <div>
+                    <select class="form-control input-sm" v-model="hostsTable.params.pageSize" @change="hostsTable.params.page=1; href()">
+                        <option v-for="size, idx in hostsTable.pageSizes" :key="idx" :value="size">${size}条/页</option>
+                    </select>
+                    <ul class="pagination pagination-sm">
+                        <li v-if="hostsTable.params.page!=1"><a href="#" @click="hostsTable.params.page=1; href()"><i class="glyphicon glyphicon-step-backward"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-backward"></i></a></li>
+                        <li v-if="hostsTable.params.page!=1"><a href="#" @click="hostsTable.params.page=Number(hostsTable.params.page)-1; href()"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
+                        <li class="active"><a href="#">${hostsTable.params.page}</a></li>
+                        <li v-if="hostsTable.params.page!=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize))"><a href="#" @click="hostsTable.params.page=Number(hostsTable.params.page)+1; href()"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
+                        <li v-if="hostsTable.params.page!=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize))"><a href="#" @click="hostsTable.params.page=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize)); href()"><i class="glyphicon glyphicon-step-forward"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-forward"></i></a></li>
+                    </ul>
+                </div>
             </div>
         </div>
-        <div class="panel panel-default host-list-panel">
-            <div class="panel-body">
-                <table class="table table-responsive">
+        <div class="col-sm-7">
+            <ul v-if="currHost" class="nav nav-tabs host-manage-nav">
+                <li :class="currAction=='info' ? 'active' : ''" @click="currAction='info'">
+                    <a href="#">信息</a>
+                </li>
+            </ul>
+
+            <div v-if="currAction=='info'" class="host-manage-body">
+                <table class="table table-bordered">
                     <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>地址</th>
-                        <th>状态</th>
-                    </tr>
+                    <tr><th colspan="2">基本信息</th></tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(row, idx) in hostsTable.data"
-                        :key="idx"
-                        @click="rowClick(row, idx)"
-                        :class="currHost && currHost.id == row.id ? 'success' : ''"
-                    >
-                        <td>${idx + 1}</td>
-                        <td>${row.address}</td>
-                        <td>${row.status}</td>
-                    </tr>
+                    <tr><td style="width: 100px">地址</td><td>${currHost.address}</td></tr>
+                    <tr><td>状态</td><td>${currHost.status}</td></tr>
+                    <tr><td>创建时间</td><td>${currHost.created}</td></tr>
+                    <tr><td>最近更新时间</td><td>${currHost.updated}</td></tr>
+                    </tbody>
+                </table>
+                <table class="table table-bordered">
+                    <thead>
+                    <tr><th colspan="6">计划任务（${currHostJobsTable.total}）</th></tr>
+                    <tr><th>#</th><th>名称</th><th>状态</th><th>描述</th><th>调度周期</th><th>创建时间</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(row, idx) in currHostJobsTable.data"
+                            :key="idx"
+                        >
+                            <td>${idx + 1}</td>
+                            <td>${row.name}</td>
+                            <td>${row.status}</td>
+                            <td>${row.description}</td>
+                            <td>${row.spec}</td>
+                            <td>${row.created}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-        <div class="host-pagination">
-            <div>
-                当前第${hostsTable.params.page}页，${hostsTable.data.length}条；共${Math.floor(hostsTable.total/Number(hostsTable.params.pageSize))+1}页，${hostsTable.total}条
-            </div>
-            <div>
-                <select class="form-control input-sm" v-model="hostsTable.params.pageSize" @change="hostsTable.params.page=1; href()">
-                    <option v-for="size, idx in hostsTable.pageSizes" :key="idx" :value="size">${size}条/页</option>
-                </select>
-                <ul class="pagination pagination-sm">
-                    <li v-if="hostsTable.params.page!=1"><a href="#" @click="hostsTable.params.page=1; href()"><i class="glyphicon glyphicon-step-backward"></i></a></li>
-                    <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-backward"></i></a></li>
-                    <li v-if="hostsTable.params.page!=1"><a href="#" @click="hostsTable.params.page=Number(hostsTable.params.page)-1; href()"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
-                    <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
-                    <li class="active"><a href="#">${hostsTable.params.page}</a></li>
-                    <li v-if="hostsTable.params.page!=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize))"><a href="#" @click="hostsTable.params.page=Number(hostsTable.params.page)+1; href()"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
-                    <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
-                    <li v-if="hostsTable.params.page!=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize))"><a href="#" @click="hostsTable.params.page=Math.ceil(hostsTable.total/Number(hostsTable.params.pageSize)); href()"><i class="glyphicon glyphicon-step-forward"></i></a></li>
-                    <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-forward"></i></a></li>
-                </ul>
-            </div>
-        </div>
     </div>
-    <div class="col-sm-7">
-        <ul v-if="currHost" class="nav nav-tabs host-manage-nav">
-            <li :class="currAction=='info' ? 'active' : ''" @click="currAction='info'">
-                <a href="#">信息</a>
-            </li>
-        </ul>
 
-        <div v-if="currAction=='info'" class="host-manage-body">
-            <table class="table table-bordered">
-                <thead>
-                <tr><th colspan="2">基本信息</th></tr>
-                </thead>
-                <tbody>
-                <tr><td style="width: 90px">地址</td><td>${currHost.address}</td></tr>
-                <tr><td>状态</td><td>${currHost.status}</td></tr>
-                <tr><td>创建时间</td><td>${currHost.created}</td></tr>
-                <tr><td>最近更新时间</td><td>${currHost.updated}</td></tr>
-                </tbody>
-            </table>
-            <table class="table table-bordered">
-                <thead>
-                <tr><th colspan="6">计划任务（${currHostJobsTable.total}）</th></tr>
-                <tr><th>#</th><th>名称</th><th>状态</th><th>描述</th><th>调度周期</th><th>创建时间</th></tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(row, idx) in currHostJobsTable.data"
-                        :key="idx"
-                    >
-                        <td>${idx + 1}</td>
-                        <td>${row.name}</td>
-                        <td>${row.status}</td>
-                        <td>${row.description}</td>
-                        <td>${row.spec}</td>
-                        <td>${row.created}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    {{template "footer"}}
 </div>
-
-{{template "footer"}}
 </body>
 <script>
     new Vue({
         el: '#app',
         delimiters: ['${', '}'],
         data: {
+            pageName: "host",
             hostsTable: {
                 params: {
                     search: "",
@@ -195,20 +198,20 @@
     })
 </script>
 <style>
-    #app div:first-child {
+    #page-content div:first-child {
         overflow: auto;
     }
 
-    #app table:first-child td, #app table:first-child th {
+    #page-content table:first-child td, #app table:first-child th {
         word-break: keep-all;
         white-space:nowrap;
     }
 
-    #app div:first-child tbody tr {
+    #page-content div:first-child tbody tr {
         cursor: pointer;
     }
 
-    #app > div {
+    #page-content > div {
         height: calc(100% - 15px);
     }
 

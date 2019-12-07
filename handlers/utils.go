@@ -19,3 +19,13 @@ func MakeJobKv(job models.Job) map[string]interface{} {
 	row["sysuser"] = job.Sysuser
 	return row
 }
+
+func MakeHostKv(host models.Host) map[string]interface{} {
+	row := make(map[string]interface{})
+	row["id"] = host.Id
+	row["address"] = host.Address
+	row["status"] = host.Status
+	row["created"] = host.Created
+	row["updated"] = host.Updated
+	return row
+}

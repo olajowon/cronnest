@@ -4,9 +4,9 @@
     {{template "head"}}
 </head>
 <body>
+<div id="app">
     {{template "nav"}}
-
-    <div id="app">
+    <div id="page-content">
         <div class="col-sm-5">
             <div class="job-list-head">
                 <div class="input-group search-job-inputgroup">
@@ -101,7 +101,7 @@
                         <tr><th colspan="2">基本信息</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td style="width: 90px">名称</td><td>${currJob.name}</td></tr>
+                        <tr><td style="width: 100px">名称</td><td>${currJob.name}</td></tr>
                         <tr><td>描述</td><td>${currJob.description}</td></tr>
                         <tr><td>状态</td><td>${currJob.status}</td></tr>
                         <tr><td>主机</td><td>${currJob.hosts}</td></tr>
@@ -198,12 +198,14 @@
     </div>
 
     {{template "footer"}}
+</div>
 </body>
 <script>
     new Vue({
         el: '#app',
         delimiters: ['${', '}'],
         data: {
+            pageName: "job",
             jobsTable: {
                 params: {
                     search: "",
@@ -375,20 +377,20 @@
     })
 </script>
 <style>
-    #app div:first-child {
+    #page-content div:first-child {
         overflow: auto;
     }
 
-    #app table:first-child td, #app table:first-child th {
+    #page-content table:first-child td, #app table:first-child th {
         word-break: keep-all;
         white-space:nowrap;
     }
 
-    #app div:first-child tbody tr {
+    #page-content div:first-child tbody tr {
         cursor: pointer;
     }
 
-    #app > div {
+    #page-content > div {
         height: calc(100% - 15px);
     }
 

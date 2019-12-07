@@ -11,9 +11,9 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
-                <li class="active"><a href="/html/jobs/">计划任务</a></li>
-                <li><a href="/html/hosts/">主机视图</a></li>
-                <li><a href="/html/records/">操作记录</a></li>
+                <li :class="pageName=='job' ? 'active' : ''"><a href="/html/jobs/">计划任务</a></li>
+                <li :class="pageName=='host' ? 'active' : ''"><a href="/html/hosts/">主机视图</a></li>
+                <li :class="pageName=='operationRecord' ? 'active' : ''"><a href="/html/operation_records/">操作记录</a></li>
             </ul>
         </div>
     </div>
