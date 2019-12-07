@@ -29,13 +29,7 @@ func GetHosts(c *gin.Context) {
 	var data []map[string]interface{}
 	data = []map[string]interface{} {}
 	for _, host := range hosts {
-		row := make(map[string]interface{})
-		row["id"] = host.Id
-		row["address"] = host.Address
-		row["status"] = host.Status
-		row["created"] = host.Created
-		row["updated"] = host.Updated
-		data = append(data, row)
+		data = append(data, MakeHostKv(host))
 	}
 
 	c.JSON(http.StatusOK, gin.H{"code": 200, "data": data, "total": count})

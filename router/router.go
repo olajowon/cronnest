@@ -23,6 +23,7 @@ func InitRouter() *gin.Engine {
 		apiGroup.DELETE("/jobs/:pk/", handlers.DeleteJob)
 		apiGroup.GET("/hosts/", handlers.GetHosts)
 		apiGroup.GET("/host_jobs/", handlers.GetHostJobs)
+		apiGroup.GET("/operation_records/", handlers.GetOperationRecords)
 	}
 
 	return router

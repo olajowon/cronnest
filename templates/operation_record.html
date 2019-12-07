@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+{{template "head"}}
+</head>
+<body>
+<div id="app">
+{{template "nav"}}
+
+    <div id="page-content">
+        <div class="col-sm-6">
+            <div class="record-list-head">
+                <div class="input-group search-record-inputgroup">
+                    <input type="text" class="form-control input-sm" placeholder="模糊搜索资源标识" v-model="search">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-sm" type="button"
+                                @click="recordsTable.params.search=search; recordsTable.params.page=1; href()">搜索</button>
+                    </span>
+                </div>
+            </div>
+            <div class="panel panel-default record-list-panel">
+                <div class="panel-body">
+                    <table class="table table-responsive">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>资源类型</th>
+                            <th>资源标识</th>
+                            <th>操作用户</th>
+                            <th>操作类型</th>
+                            <th>操作时间</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(row, idx) in recordsTable.data"
+                            :key="idx"
+                            @click="rowClick(row, idx)"
+                            :class="currRecord && currRecord.id == row.id ? 'success' : ''"
+                        >
+                            <td>${(Number(recordsTable.params.page)-1) * Number(recordsTable.params.pageSize) + idx + 1}</td>
+                            <td>${resourceTypeMp[row.resource_type]}</td>
+                            <td>${row.resource_label}</td>
+                            <td>${row.user}</td>
+                            <td>${operationTypeMp[row.operation_type]}</td>
+                            <td>${row.created}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="record-pagination">
+                <div>
+                    当前第${recordsTable.params.page}页，${recordsTable.data.length}条；共${Math.floor(recordsTable.total/Number(recordsTable.params.pageSize))+1}页，${recordsTable.total}条
+                </div>
+                <div>
+                    <select class="form-control input-sm" v-model="recordsTable.params.pageSize" @change="recordsTable.params.page=1; href()">
+                        <option v-for="size, idx in recordsTable.pageSizes" :key="idx" :value="size">${size}条/页</option>
+                    </select>
+                    <ul class="pagination pagination-sm">
+                        <li v-if="recordsTable.params.page!=1"><a href="#" @click="recordsTable.params.page=1; href()"><i class="glyphicon glyphicon-step-backward"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-backward"></i></a></li>
+                        <li v-if="recordsTable.params.page!=1"><a href="#" @click="recordsTable.params.page=Number(recordsTable.params.page)-1; href()"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-left"></i></a></li>
+                        <li class="active"><a href="#">${recordsTable.params.page}</a></li>
+                        <li v-if="recordsTable.params.page!=Math.ceil(recordsTable.total/Number(recordsTable.params.pageSize))"><a href="#" @click="recordsTable.params.page=Number(recordsTable.params.page)+1; href()"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-triangle-right"></i></a></li>
+                        <li v-if="recordsTable.params.page!=Math.ceil(recordsTable.total/Number(recordsTable.params.pageSize))"><a href="#" @click="recordsTable.params.page=Math.ceil(recordsTable.total/Number(recordsTable.params.pageSize)); href()"><i class="glyphicon glyphicon-step-forward"></i></a></li>
+                        <li v-else class="disabled"><a href="#"><i class="glyphicon glyphicon-step-forward"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <ul v-if="currRecord" class="nav nav-tabs record-manage-nav">
+                <li :class="currAction=='info' ? 'active' : ''" @click="currAction='info'">
+                    <a href="#">信息</a>
+                </li>
+            </ul>
+
+            <div v-if="currAction=='info'" class="record-manage-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr><th colspan="2">基本信息</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="width: 100px">操作用户</td><td>${currRecord.user}</td></tr>
+                        <tr><td>记录时间</td><td>${currRecord.created}</td></tr>
+                        <tr><td>资源类型</td><td>${resourceTypeMp[currRecord.resource_type]}</td></tr>
+                        <tr><td>资源ID</td><td>${currRecord.resource_id}</td></tr>
+                        <tr><td>操作类型</td><td>${operationTypeMp[currRecord.operation_type]}</td></tr>
+                        <tr><td>资源数据</td><td><pre id="currRecordData"></pre></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{{template "footer"}}
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        delimiters: ['${', '}'],
+        data: {
+            pageName: "operationRecord",
+            recordsTable: {
+                params: {
+                    search: "",
+                    page: 1,
+                    pageSize: 10,
+                },
+                data: [],
+                total: 0,
+                pageSizes: [5, 10, 20, 50, 100]
+            },
+            currRecord: null,
+            currRecordRowIdx: null,
+            currAction: null,
+            currRecordJobsTable: {
+                data: [],
+                total: 0
+            },
+            search: "",
+            operationTypeMp: {
+                create: "创建",
+                update: "编辑",
+                delete: "删除"
+            },
+            resourceTypeMp: {
+                job: "任务",
+                host: "主机"
+            }
+        },
+
+        mounted: function () {
+            this.setParams();
+            this.getRecords();
+        },
+        methods: {
+            href: function() {
+                let params = [];
+                for (let k in this.recordsTable.params) {
+                    if (this.recordsTable.params[k]) {
+                        params.push(k+"="+this.recordsTable.params[k])
+                    }
+                }
+                window.location.href = "/html/operation_records/?" + params.join("&")
+            },
+
+            setParams: function() {
+                for (let k in this.recordsTable.params) {
+                    let v = this.getQueryVariable(k);
+                    if (v) {
+                        this.recordsTable.params[k] = v;
+                    }
+                }
+            },
+
+            getRecords: function () {
+                console.log("getRecords")
+                let _this = this;
+                axios.get('/api/operation_records/', {params: this.recordsTable.params})
+                    .then(function(resp){
+                        _this.recordsTable.data = resp.data.data;
+                        _this.recordsTable.total = resp.data.total;
+                    })
+            },
+
+            rowClick: function (row, rowIdx) {
+                this.currRecord = row;
+                this.currRecordRowIdx = rowIdx;
+                this.currAction = 'info';
+                this.$nextTick(()=> {
+                    $("#currRecordData").JSONView(row.data, {collapsed: true})
+                })
+            },
+
+            getQueryVariable: function (variable) {
+                let query = window.location.search.substring(1);
+                let vars = query.split("&");
+                for (let i=0;i<vars.length;i++) {
+                    let pair = vars[i].split("=");
+                    if(pair[0] == variable){return pair[1];}
+                }
+                return false;
+            }
+        }
+    })
+</script>
+<style>
+    #page-content div:first-child {
+        overflow: auto;
+    }
+
+    #page-content table:first-child td, #page-content table:first-child th {
+        word-break: keep-all;
+        white-space:nowrap;
+    }
+
+    #page-content div:first-child tbody tr {
+        cursor: pointer;
+    }
+
+    #page-content > div {
+        height: calc(100% - 15px);
+    }
+
+    .record-manage-nav {
+        margin-bottom: 10px;
+    }
+
+    .record-manage-body {
+        height: calc(100% - 50px);
+        overflow-y: auto;
+        padding: 5px;
+    }
+
+    .search-record-inputgroup {
+        width: 50%; float: left
+    }
+
+    .record-list-head {
+        margin-bottom: 10px
+    }
+
+    .record-list-panel {
+        max-height: calc(100% - 90px); overflow: auto
+    }
+
+    #submittingModal > div > div {
+        font-size: 20px;
+        color: #fff;
+        text-align: center;
+        margin-top: 100pt
+    }
+
+    .pagination {
+        margin: 0px !important;
+    }
+
+    .record-pagination > div:first-child {
+        float: left;
+    }
+
+    .record-pagination > div:last-child {
+        float: right;
+    }
+
+    .record-pagination > div:last-child > select {
+        float: left;
+        width: 70px !important;
+        margin-right: 5px;
+    }
+
+    .record-pagination > div:last-child > ul {
+        float: right;
+    }
+
+    #currRecordData {
+        max-height: 290px;
+        overflow: auto;
+        margin-bottom: 0px;
+    }
+</style>
+</html>

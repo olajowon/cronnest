@@ -12,8 +12,8 @@ func Html(c *gin.Context){
 		html = "job.html"
 	} else if tpl == "hosts" {
 		html = "host.html"
-	} else if tpl == "records" {
-		html = "record.html"
+	} else if tpl == "operation_records" {
+		html = "operation_record.html"
 	} else {
 		c.JSON(http.StatusOK, gin.H{"msg": "滚犊子！"})
 	}

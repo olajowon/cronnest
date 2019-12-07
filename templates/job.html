@@ -37,7 +37,7 @@
                             @click="rowClick(row, idx)"
                             :class="currJob && currJob.id == row.id ? 'success' : ''"
                         >
-                            <td>${idx + 1}</td>
+                            <td>${(Number(jobsTable.params.page)-1) * Number(jobsTable.params.pageSize) + idx + 1}</td>
                             <td>${row.name}</td>
                             <td>${row.status}</td>
                             <td>${row.description}</td>
@@ -104,11 +104,15 @@
                         <tr><td style="width: 100px">名称</td><td>${currJob.name}</td></tr>
                         <tr><td>描述</td><td>${currJob.description}</td></tr>
                         <tr><td>状态</td><td>${currJob.status}</td></tr>
-                        <tr><td>主机</td><td>${currJob.hosts}</td></tr>
+                        <tr><td>主机</td><td>${currJob.hosts.join("、")}</td></tr>
                         <tr><td>系统用户</td><td>${currJob.sysuser}</td></tr>
                         <tr><td>联系人</td><td>${currJob.mailto}</td></tr>
                         <tr><td>调度</td><td>${currJob.spec}</td></tr>
-                        <tr><td>内容</td><td>${currJob.content}</td></tr>
+                        <tr><td>内容</td>
+                            <td>
+                                <pre class="job-content">${currJob.content}</pre>
+                            </td>
+                        </tr>
                         <tr><td>创建时间</td><td>${currJob.created}</td></tr>
                         <tr><td>最近更新时间</td><td>${currJob.updated}</td></tr>
                     </tbody>
@@ -381,7 +385,7 @@
         overflow: auto;
     }
 
-    #page-content table:first-child td, #app table:first-child th {
+    #page-content table:first-child td, #page-content table:first-child th {
         word-break: keep-all;
         white-space:nowrap;
     }
@@ -458,6 +462,12 @@
         font-size: 14px;
         margin-bottom: 30px;
         margin-top: 10px;
+    }
+
+    .job-content {
+        margin-bottom: 0px;
+        max-height: 100px;
+        overflow: auto;
     }
 </style>
 </html>

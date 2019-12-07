@@ -34,7 +34,7 @@
                             @click="rowClick(row, idx)"
                             :class="currHost && currHost.id == row.id ? 'success' : ''"
                         >
-                            <td>${idx + 1}</td>
+                            <td>${(Number(hostsTable.params.page)-1) * Number(hostsTable.params.pageSize) + idx + 1}</td>
                             <td>${row.address}</td>
                             <td>${row.status}</td>
                         </tr>
@@ -202,7 +202,7 @@
         overflow: auto;
     }
 
-    #page-content table:first-child td, #app table:first-child th {
+    #page-content table:first-child td, #page-content table:first-child th {
         word-break: keep-all;
         white-space:nowrap;
     }

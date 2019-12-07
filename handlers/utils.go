@@ -29,3 +29,16 @@ func MakeHostKv(host models.Host) map[string]interface{} {
 	row["updated"] = host.Updated
 	return row
 }
+
+func MakeOperationRecordKv(record models.OperationRecord) map[string]interface{} {
+	row := make(map[string]interface{})
+	row["id"] = record.Id
+	row["resource_type"] = record.ResourceType
+	row["resource_id"] = record.ResourceId
+	row["resource_label"] = record.ResourceLabel
+	row["operation_type"] = record.OperationType
+	row["data"] = record.Data
+	row["user"] = record.User
+	row["created"] = record.Created
+	return row
+}

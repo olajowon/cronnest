@@ -33,6 +33,7 @@ type OperationRecord struct {
 	Id				int64
 	ResourceType	string
 	ResourceId		int64
+	ResourceLabel	string
 	OperationType	string
 	Data			json.RawMessage `sql:"type:jsonb"`
 	User			string

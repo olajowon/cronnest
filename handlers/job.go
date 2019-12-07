@@ -99,8 +99,8 @@ func CreateJob(c *gin.Context) {
 
 			hostData := MakeHostKv(host)
 			jsonHostData, _ := json.Marshal(hostData)
-			operRecord := models.OperationRecord{ResourceType:"host", ResourceId:host.Id, OperationType: operationType,
-				Data:jsonHostData, User: user, Created: time.Now()}
+			operRecord := models.OperationRecord{ResourceType:"host", ResourceId:host.Id, ResourceLabel: host.Address,
+				OperationType: operationType, Data:jsonHostData, User: user, Created: time.Now()}
 			if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 				transaction.Rollback()
 				c.JSON(http.StatusInternalServerError,
@@ -112,8 +112,8 @@ func CreateJob(c *gin.Context) {
 
 	data := MakeJobKv(job)
 	jsonData, _ := json.Marshal(data)
-	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:job.Id, OperationType: "create",
-		Data:jsonData, User: user, Created: time.Now()}
+	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:job.Id, ResourceLabel: job.Name,
+		OperationType: "create", Data:jsonData, User: user, Created: time.Now()}
 	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		c.JSON(http.StatusInternalServerError,
@@ -188,8 +188,8 @@ func UpdateJob(c *gin.Context) {
 
 			hostData := MakeHostKv(host)
 			jsonHostData, _ := json.Marshal(hostData)
-			operRecord := models.OperationRecord{ResourceType:"host", ResourceId:host.Id, OperationType: operationType,
-				Data:jsonHostData, User: user, Created: time.Now()}
+			operRecord := models.OperationRecord{ResourceType:"host", ResourceId:host.Id, ResourceLabel: host.Address,
+				OperationType: operationType, Data:jsonHostData, User: user, Created: time.Now()}
 			if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 				transaction.Rollback()
 				c.JSON(http.StatusInternalServerError,
@@ -201,8 +201,8 @@ func UpdateJob(c *gin.Context) {
 
 	data := MakeJobKv(updateJob)
 	jsonData, _ := json.Marshal(data)
-	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:updateJob.Id, OperationType: "update",
-		Data:jsonData, User: user, Created: time.Now()}
+	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:updateJob.Id, ResourceLabel: updateJob.Name,
+		OperationType: "update", Data:jsonData, User: user, Created: time.Now()}
 	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		c.JSON(http.StatusInternalServerError,
@@ -233,8 +233,8 @@ func DeleteJob(c *gin.Context) {
 
 	data := MakeJobKv(deleteJob)
 	jsonData, _ := json.Marshal(data)
-	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:deleteJob.Id, OperationType: "delete",
-		Data:jsonData, User: user, Created: time.Now()}
+	operRecord := models.OperationRecord{ResourceType:"job", ResourceId:deleteJob.Id, ResourceLabel: deleteJob.Name,
+		OperationType: "delete", Data:jsonData, User: user, Created: time.Now()}
 	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		c.JSON(http.StatusInternalServerError,
