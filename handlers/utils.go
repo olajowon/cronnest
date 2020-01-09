@@ -13,10 +13,10 @@ func MakeJobKv(job models.Job) map[string]interface{} {
 	row["content"] = job.Content
 	row["log"] = job.Log
 	row["output"] = job.Output
-	row["created"] = job.Created
-	row["updated"] = job.Updated
+	row["created"] = job.Created.Format("2006-01-02 15:04:05")
+	row["updated"] = job.Updated.Format("2006-01-02 15:04:05")
 	row["hosts"] = job.Hosts
-	row["sysuser"] = job.Sysuser
+	row["user"] = job.Sysuser
 	return row
 }
 
@@ -25,8 +25,8 @@ func MakeHostKv(host models.Host) map[string]interface{} {
 	row["id"] = host.Id
 	row["address"] = host.Address
 	row["status"] = host.Status
-	row["created"] = host.Created
-	row["updated"] = host.Updated
+	row["created"] = host.Created.Format("2006-01-02 15:04:05")
+	row["updated"] = host.Updated.Format("2006-01-02 15:04:05")
 	return row
 }
 
@@ -39,6 +39,6 @@ func MakeOperationRecordKv(record models.OperationRecord) map[string]interface{}
 	row["operation_type"] = record.OperationType
 	row["data"] = record.Data
 	row["user"] = record.User
-	row["created"] = record.Created
+	row["created"] = record.Created.Format("2006-01-02 15:04:05")
 	return row
 }

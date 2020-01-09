@@ -21,9 +21,10 @@ require (
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/silenceper/gowatch v0.0.0-20191122025114-d9a4b93d0ed4 // indirect
 	github.com/silenceper/log v0.0.0-20171204144354-e5ac7fa8a76a // indirect
-	github.com/sirupsen/logrus v1.4.2 // indirect
+	github.com/sirupsen/logrus v1.4.2
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/valyala/fasttemplate v1.1.0 // indirect
+	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
 	golang.org/x/sys v0.0.0-20191110163157-d32e6e3b99c4 // indirect
 	gopkg.in/gin-gonic/gin.v1 v1.3.0 // indirect
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0 // indirect

@@ -10,6 +10,7 @@ import (
 	"time"
 	"strconv"
 	"fmt"
+	"regexp"
 )
 
 type JobReqData struct {
@@ -68,13 +69,13 @@ func CreateJob(c *gin.Context) {
 	result := transaction.Table("job").Create(&job)
 	if result.Error != nil {
 		transaction.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": result.Error.Error()})
 		return
 	}
 
 	for _, name := range reqData.Hosts {
 		host := models.Host{}
-		transaction.Table("host").Where("name = ?", name).First(&host)
+		transaction.Table("host").Where("address = ?", name).First(&host)
 		if host.Id == 0 || host.Status != "enabled" {
 			var operationType string
 			if host.Id == 0 {
@@ -93,7 +94,7 @@ func CreateJob(c *gin.Context) {
 			if result.Error != nil {
 				transaction.Rollback()
 				c.JSON(http.StatusInternalServerError,
-					gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+					gin.H{"code": 500, "msg": result.Error.Error()})
 				return
 			}
 
@@ -104,7 +105,7 @@ func CreateJob(c *gin.Context) {
 			if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 				transaction.Rollback()
 				c.JSON(http.StatusInternalServerError,
-					gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+					gin.H{"code": 500, "msg": result.Error.Error()})
 				return
 			}
 		}
@@ -117,7 +118,7 @@ func CreateJob(c *gin.Context) {
 	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		c.JSON(http.StatusInternalServerError,
-			gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+			gin.H{"code": 500, "msg": result.Error.Error()})
 		return
 	}
 	transaction.Commit()
@@ -157,7 +158,7 @@ func UpdateJob(c *gin.Context) {
 	result := transaction.Table("job").Save(&updateJob)
 	if result.Error != nil {
 		transaction.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": result.Error.Error()})
 		return
 	}
 
@@ -193,7 +194,7 @@ func UpdateJob(c *gin.Context) {
 			if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 				transaction.Rollback()
 				c.JSON(http.StatusInternalServerError,
-					gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+					gin.H{"code": 500, "msg": result.Error.Error()})
 				return
 			}
 		}
@@ -206,7 +207,7 @@ func UpdateJob(c *gin.Context) {
 	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		c.JSON(http.StatusInternalServerError,
-			gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+			gin.H{"code": 500, "msg": result.Error.Error()})
 		return
 	}
 	transaction.Commit()
@@ -227,7 +228,7 @@ func DeleteJob(c *gin.Context) {
 	result := db.DB.Table("job").Delete(&deleteJob)
 	if result.Error != nil {
 		transaction.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": result.Error.Error()})
 		return
 	}
 
@@ -238,7 +239,7 @@ func DeleteJob(c *gin.Context) {
 	if result = db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		c.JSON(http.StatusInternalServerError,
-			gin.H{"code": 500, "msg": fmt.Sprintf("%v", result.Error)})
+			gin.H{"code": 500, "msg": result.Error.Error()})
 		return
 	}
 
@@ -248,8 +249,11 @@ func DeleteJob(c *gin.Context) {
 
 func cleanedJobData(data *JobReqData, updateJobId int64) map[string]string {
 	error := make(map[string]string)
+	nameReg, _ := regexp.Compile("^[a-z_]*$")
 	if data.Name == "" {
 		error["name"] = "任务名称是必填项"
+	} else if !nameReg.MatchString(data.Name) {
+		error["name"] = "任务名称格式不正确"
 	} else {
 		job := models.Job{}
 		if updateJobId == 0 {
@@ -300,7 +304,7 @@ func cleanedJobData(data *JobReqData, updateJobId int64) map[string]string {
 	}
 
 	if data.Sysuser == "" {
-		error["sysuser"] = "任务系统用户是必填项"
+		error["sysuser"] = "任务所属的系统用户是必填项"
 	}
 	return error
 }

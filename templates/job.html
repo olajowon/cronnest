@@ -303,6 +303,7 @@
             },
 
             submitAddOrUpdate: function (action) {
+                this.addOrUpdateFormError = {};
                 let data = {
                     name: this.addOrUpdateForm.name,
                     status: this.addOrUpdateForm.status,
