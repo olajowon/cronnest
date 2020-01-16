@@ -14,17 +14,21 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"time"
+	"sync"
 )
 
 const LogPath = "/tmp/cronnest-worker.log"
-const Forks = 20
+const Forks = 1
 
 var Log = logrus.New()
 var HostAddrs []string
 var AgentBase64Content string
 var SshClientConfig ssh.ClientConfig
 
-func pushJobs(hostAddr string) {
+func pushJobs(hostAddr string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	fmt.Println(hostAddr)
+
 	status, jobs, msg := pushJobsTask(hostAddr)
 
 	if status != "successful" {
@@ -54,7 +58,6 @@ func pushJobs(hostAddr string) {
 		return
 	}
 	transaction.Commit()
-
 	Log.Infof("pushJobs(%s) finish, Task {status: %s}", hostAddr, status)
 }
 
@@ -156,6 +159,7 @@ func makeHostAddrs() {
 
 
 func pushEntry() {
+	begin := time.Now().Unix()
 	for startIdx := 0; startIdx < len(HostAddrs); startIdx += Forks {
 		var endIdx int
 		if startIdx + Forks > len(HostAddrs) {
@@ -163,11 +167,21 @@ func pushEntry() {
 		} else {
 			endIdx = startIdx + Forks
 		}
-		addrs := HostAddrs[startIdx: endIdx]
 
+		addrs := HostAddrs[startIdx: endIdx]
+		fmt.Println(addrs)
+
+		var wg sync.WaitGroup
 		for _, hostAddr := range addrs {
-			go pushJobs(hostAddr)
+			wg.Add(1)
+			go pushJobs(hostAddr, &wg)
 		}
+		wg.Wait()
+	}
+	finish := time.Now().Unix()
+	duration := finish - begin
+	if duration >= 60 {
+		Log.Warnf("pushEntry warning: 推送任务耗时达到 %d 秒，请添加线程或清理无用主机，保证推送任务 60 秒内能够完成！")
 	}
 }
 
@@ -187,6 +201,8 @@ func main() {
 	makeSshClientConfig()
 	makeAgentContent()
 	makeHostAddrs()
+	fmt.Println(HostAddrs)
+
 	pushEntry()
 	//c := cron.New()
 	//spec := "0 */1 * * * ?"

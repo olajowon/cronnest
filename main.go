@@ -6,12 +6,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"cronnest/router"
 	db "cronnest/database"
-	"fmt"
 )
-
-func f() {
-	fmt.Println("hheee")
-}
 
 func main() {
 	defer db.DB.Close()
