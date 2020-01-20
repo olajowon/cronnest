@@ -20,5 +20,4 @@ func init() {
 	if DB.Error != nil {
 		fmt.Printf("database error, %v", DB.Error)
 	}
-
 }

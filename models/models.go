@@ -7,17 +7,14 @@ import (
 
 type Job struct {
 	Id			int64
-	Name		string
+	Comment		string
 	Status		string
-	Description	string
-	Mailto		string
 	Spec		string
 	Content		string
 	Log			string
-	Output		string
 	Created		time.Time
 	Updated		time.Time
-	Hosts		json.RawMessage `sql:"type:jsonb"`
+	Host		string
 	Sysuser		string
 }
 
@@ -36,7 +33,6 @@ type Host struct {
 	Id			int64
 	Address		string
 	Status		string
-	PushStatus  string
 	Created		time.Time
 	Updated		time.Time
 }
