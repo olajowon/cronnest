@@ -19,12 +19,16 @@ func GetOperationRecords(c *gin.Context) {
 	var operationRecords []models.OperationRecord
 	var count int
 	if search != "" {
+		fmt.Println("se", string(search))
 		search = fmt.Sprintf("%%%v%%", search)
-		db.DB.Table("operation_record").Where("resource_label LIKE ?", search).
-			Count(&count).Limit(limit).Offset(offset).Order("-id").Find(&operationRecords)
+		fmt.Println(search)
+		db.DB.Table("operation_records").Where( "resource_label LIKE ?", search).Count(&count).
+			Limit(limit).Offset(offset).Order("-id").Find(&operationRecords)
 	} else {
-		db.DB.Table("operation_record").
-			Count(&count).Limit(limit).Offset(offset).Order("-id").Find(&operationRecords)
+		fmt.Println("se1", search)
+		res := db.DB.Table("operation_records").Count(&count).
+			Limit(limit).Offset(offset).Order("-id").Find(&operationRecords)
+		fmt.Println(res.Value)
 	}
 
 	var data []map[string]interface{}

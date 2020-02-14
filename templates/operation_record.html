@@ -6,7 +6,6 @@
 <body>
 <div id="app">
 {{template "nav"}}
-
     <div id="page-content">
         <div class="col-sm-6">
             <div class="record-list-head">
@@ -152,13 +151,12 @@
                 for (let k in this.recordsTable.params) {
                     let v = this.getQueryVariable(k);
                     if (v) {
-                        this.recordsTable.params[k] = v;
+                        this.recordsTable.params[k] = decodeURI(v);
                     }
                 }
             },
 
             getRecords: function () {
-                console.log("getRecords")
                 let _this = this;
                 axios.get('/api/operation_records/', {params: this.recordsTable.params})
                     .then(function(resp){

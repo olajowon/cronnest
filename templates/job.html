@@ -80,7 +80,7 @@
                     <a href="#">删除</a>
                 </li>
                 <li :class="currAction=='cmd' ? 'active' : ''" @click="currAction='cmd'">
-                    <a href="#">执行</a>
+                    <a href="#">手动执行</a>
                 </li>
                 <li :class="currAction=='cmdRecord' ? 'active' : ''" @click="currAction='cmdRecord'">
                     <a href="#">执行记录</a>
@@ -266,7 +266,7 @@
                 for (let k in this.jobsTable.params) {
                     let v = this.getQueryVariable(k);
                     if (v) {
-                        this.jobsTable.params[k] = v;
+                        this.jobsTable.params[k] = decodeURI(v);
                     }
                 }
             },

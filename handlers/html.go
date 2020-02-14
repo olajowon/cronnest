@@ -3,10 +3,13 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"fmt"
 )
 
 func Html(c *gin.Context){
 	tpl := c.Param("tpl")
+	user, _, _ := c.Request.BasicAuth()
+	fmt.Println(user)
 	var html string
 	if tpl == "jobs" {
 		html = "job.html"
@@ -17,5 +20,5 @@ func Html(c *gin.Context){
 	} else {
 		c.JSON(http.StatusOK, gin.H{"msg": "滚犊子！"})
 	}
-	c.HTML(http.StatusOK, html, gin.H{})
+	c.HTML(http.StatusOK, html, gin.H{"user": user})
 }

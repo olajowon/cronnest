@@ -31,10 +31,10 @@ func GetJobs(c *gin.Context) {
 	var count int
 	if search != "" {
 		search = fmt.Sprintf("%%%v%%", search)
-		db.DB.Find(&jobs).Where("comment LIKE ?", search).Count(&count).
-			Order("comment").Limit(limit).Offset(offset)
+		db.DB.Table("jobs").Where("comment LIKE ?", search).Count(&count).
+			Order("comment").Limit(limit).Offset(offset).Find(&jobs)
 	} else {
-		db.DB.Find(&jobs).Count(&count).Order("comment").Limit(limit).Offset(offset)
+		db.DB.Table("jobs").Count(&count).Order("comment").Limit(limit).Offset(offset).Find(&jobs)
 	}
 
 	var data []map[string]interface{}
