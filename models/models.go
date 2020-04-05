@@ -5,54 +5,44 @@ import (
 	"time"
 )
 
-type Job struct {
-	Id			int64
-	Comment		string
-	Status		string
-	Spec		string
-	Content		string
-	Log			string
-	Created		time.Time
-	Updated		time.Time
-	Host		string
-	Sysuser		string
-}
-
-type JobInfo struct {
+type Hostgroup struct {
 	Id			int64
 	Name		string
+	CreatedAt		time.Time
+	UpdatedAt		time.Time
+}
+
+type HostCrontab struct {
+	Id			int64
+	HostId		int64
 	Status		string
-	Description	string
-	Mailto		string
-	Spec		string
-	Content		string
-	Sysuser		string
+	Msg		    string
+	Tab 		json.RawMessage `sql:"type:jsonb"`
+	CreatedAt	time.Time
+	UpdatedAt	time.Time
+	LastSucceed *time.Time `gorm:"default:NULL"`
 }
 
 type Host struct {
 	Id			int64
 	Address		string
 	Status		string
-	Created		time.Time
-	Updated		time.Time
+	CreatedAt	time.Time
+	UpdatedAt	time.Time
+}
+
+type HostgroupHost struct {
+	HostgroupId	int64
+	HostId		int64
 }
 
 type OperationRecord struct {
 	Id				int64
-	ResourceType	string
-	ResourceId		int64
-	ResourceLabel	string
+	SourceType	string
+	SourceId		int64
+	SourceLabel	string
 	OperationType	string
 	Data			json.RawMessage `sql:"type:jsonb"`
 	User			string
-	Created			time.Time
-}
-
-type PushRecord struct {
-	Id				int64
-	Host			string
-	Status			string
-	Jobs			json.RawMessage `sql:"type:jsonb"`
-	Msg				string
-	Created			time.Time
+	CreatedAt		time.Time
 }

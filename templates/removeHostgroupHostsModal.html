@@ -1,0 +1,26 @@
+{{define "removeHostgroupHostsModal"}}
+<div class="modal fade" id="removeHostgroupHostsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">移除主机</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="name">选择移除主机</label>
+                        <div v-for="host, idx in removeHostgroupHostsData.data.hosts" class="checkbox">
+                            <label><input type="checkbox" v-model="host[1]">${host[0]}</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" @click="submitRemoveHostgroupHosts(removeHostgroupHostsData)">提交</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

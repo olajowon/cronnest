@@ -1,0 +1,24 @@
+{{define "addHostgroupHostsModal"}}
+<div class="modal fade" id="addHostgroupHostsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">添加主机</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label>主机列表（SSH连接地址） *</label>
+                            <textarea rows="10" v-model="addHostgroupHostsData.data.hosts" class="form-control" placeholder="请输入可以ssh连接的主机地址，换行添加多个..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" @click="submitAddHostgroupHosts(addHostgroupHostsData)">提交</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

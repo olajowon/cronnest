@@ -12,8 +12,9 @@ func main() {
 	defer db.DB.Close()
 
 	router := router.InitRouter()
+
 	s := &http.Server{
-		Addr:           ":8090",
+		Addr:           ":9900",
 		Handler:        router,
 		ReadTimeout:    20 * time.Second,
 		WriteTimeout:   20 * time.Second,

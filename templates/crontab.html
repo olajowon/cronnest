@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+{{template "head"}}
+</head>
+<body>
+<div id="app">
+{{template "nav" .}}
+    <div id="page-content">
+        <div class="col-sm-3" style="border-right: 1px solid #dddddd">
+            <div class="tree">
+                <ul>
+                    <li>
+                        <span @mouseover="mouseOver='Crontab'"><i @click="tree.open=!tree.open" :class="tree.open ? 'glyphicon glyphicon-minus-sign' : 'glyphicon glyphicon-plus-sign' "></i> ${tree.name}
+                            <span class="option" v-if="mouseOver=='Crontab'"><i @click="createHostgroup" class="fa fa-plus"></i></span>
+                        </span>
+                        <ul v-show="tree.open">
+                            <li v-for="hg, idx in tree.hostgroups" :key="idx">
+                                <span @mouseover="mouseOver=(hg.name)">
+                                    <i @click="handleHostgroupNodeClick(hg)" :class="hg.open ? 'glyphicon glyphicon-minus-sign' : 'glyphicon glyphicon-plus-sign' "></i>
+                                    <span>${hg.name}</span>
+                                    <span class="option" v-if="mouseOver==(hg.name)">
+                                        <i @click.stop="addHostgroupHosts(hg)" class="fa fa-plus"></i>
+                                        <i @click.stop="removeHostgroupHosts(hg)" class="fa fa-minus"></i>
+                                        <i @click.stop="updateHostgroup(hg)" class="fa fa-pencil"></i>
+                                        <i @click.stop="deleteHostgroup(hg, idx)" class="fa fa-trash"></i>
+                                    </span>
+                                </span>
+                                <ul v-show="hg.open">
+                                    <li v-for="h, idx in hg.hosts" :key="idx">
+                                        <span @mouseover="mouseOver=(hg.name+h.address)" @click="handleHostClick(h, hg)" :class="currHost.id == h.id ? 'selected' : ''">
+                                            <i class="glyphicon glyphicon-leaf"></i>
+                                            <span>${h.address}</span>
+                                            <span class="option" v-if="mouseOver==(hg.name+h.address)">
+                                                <i @click.stop="updateHost(h)" class="fa fa-pencil"></i>
+                                                <i @click.stop="deleteHost(h)" class="fa fa-trash"></i>
+                                            </span>
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-sm-9" style="height: calc(100% - 35px)">
+            <div v-if="currHost.id" style="padding: 0px 5px 3px 5px">
+                <strong>地址：</strong><span style="margin-right: 50px">${currHost.address}</span>
+                <strong>获取状态：</strong><span style="margin-right: 50px">${currHost.crontab.status=='successful' ? '成功' : (currHost.crontab.status=='failed' ? '失败' : '')}</span>
+                <strong>获取时间：</strong><span style="margin-right: 50px">${currHost.crontab.updated_at}</span>
+                <strong>最后一次成功时间：</strong><span>${currHost.crontab.last_succeed}</span>
+            </div>
+
+            <div v-if="currHost.crontab && currHost.crontab.tab" style="padding-top: 10px; height: calc(100% - 15px)">
+
+                <ul class="nav nav-tabs">
+                    <li v-for="v, tab, tidx in currHost.crontab.tab" :key="tidx" :class="queryParams.tab?(queryParams.tab==tab?'active':''):(tidx==0?'active':'')">
+                        <a :href="'#'+tab" data-toggle="tab">
+                            ${tab}${tab=='system' ? '（系统）' : ''}
+                        </a>
+                    </li>
+                </ul>
+
+                <div style="height: calc(100% - 20px); overflow: auto">
+                <div v-if="currHost.crontab.status != 'successful'" class="alert alert-warning" style="margin-bottom: 10px; margin-top: 5px">
+                    <strong>本次获取最新crontab信息失败！当前展示的crontab 信息为 ${currHost.crontab.last_succeed} 时获取，可能与主机真实Crontab信息有差异！</strong> <br>${currHost.crontab.msg}
+                </div>
+
+                <div class="tab-content">
+                    <div v-for="jobs, tab, tidx in currHost.crontab.tab" :key="tidx" :class="'tab-pane fade' + (queryParams.tab?(queryParams.tab==tab?'in active':''):(tidx==0?'in active':''))" :id="tab">
+                        <div class="col-sm-12 col-lg-12" style="padding-top: 10px">
+                            <div class="row panel panel-default">
+                                <div class="panel-body">
+                                    <button :disabled="currHost.crontab.status != 'successful'" class="btn btn-success btn-xs" @click="createJob(currHost.id, tab)">创建</button>
+                                    <table class="table table-border">
+                                        <thead>
+                                        <tr>
+                                            <th width="30px">#</th>
+                                            <th width="80px">状态</th>
+                                            <th width="100px">调度</th>
+                                            <th v-if="tab=='system'">用户</th>
+                                            <th>命令</th>
+                                            <th>备注</th>
+                                            <th width="100px">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr v-for="job, jidx in jobs" :key="jidx">
+                                            <td>${jidx + 1}</td>
+                                            <td>
+                                                <span v-if="job.enabled" style="color: #5cb85c">启用</span>
+                                                <span v-else style="color: #f0ad4e">停用</span>
+                                            </td>
+                                            <td>
+                                                <span>${job.slices}</span>
+                                            </td>
+                                            <td v-if="tab=='system'">
+                                                <span>${job.user}</span>
+                                            </td>
+                                            <td>
+                                                <span>${job.command}</span>
+                                            </td>
+                                            <td>
+                                                <span>${job.comment}</span>
+                                            </td>
+                                            <td>
+                                                <button :disabled="currHost.crontab.status != 'successful'" class="btn btn-warning btn-xs" @click="updateJob(currHost.id, tab, job)">修改</button>
+                                                <button :disabled="currHost.crontab.status != 'successful'" class="btn btn-danger btn-xs" @click="deleteJob(currHost.id, tab, job)">删除</button>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="lockingModal" style="z-index: 2050" tabindex="-1" data-backdrop="static" data-keyboard="false" role="dialog" aria-labelledby="lockingModalLabel">
+        <div class="modal-dialog">
+            <div>${locking}</div>
+        </div>
+    </div>
+    <div v-if="locking" id="lockingModal" class="modal-backdrop fade in" style="z-index: 2040"></div>
+
+{{template "updateHostModal"}}
+{{template "createHostgroupModal"}}
+{{template "updateHostgroupModal"}}
+{{template "createCrontabJobModal"}}
+{{template "updateCrontabJobModal"}}
+{{template "addHostgroupHostsModal"}}
+{{template "removeHostgroupHostsModal"}}
+{{template "footer"}}
+</div>
+</body>
+<script src="/static/js/crontab.js"></script>
+<style>
+    #page-content div:first-child {
+        overflow: auto;
+    }
+
+    #page-content table:first-child td, #page-content table:first-child th {
+        word-break: keep-all;
+        white-space:nowrap;
+    }
+
+    #page-content div:first-child tbody tr {
+        cursor: pointer;
+    }
+
+    #page-content > div {
+        height: calc(100% - 15px);
+    }
+
+    #lockingModal > div > div {
+        font-size: 20px;
+        color: #fff;
+        text-align: center;
+        margin-top: 100pt
+    }
+</style>
+</html>
+

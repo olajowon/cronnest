@@ -5,7 +5,7 @@
 </head>
 <body>
 <div id="app">
-{{template "nav"}}
+{{template "nav" .}}
     <div id="page-content">
         <div class="col-sm-6">
             <div class="record-list-head">
@@ -23,25 +23,25 @@
                         <thead>
                         <tr>
                             <th>#</th>
-                            <th>资源类型</th>
-                            <th>资源标识</th>
-                            <th>操作用户</th>
-                            <th>操作类型</th>
-                            <th>操作时间</th>
+                            <th>来源</th>
+                            <th>标识</th>
+                            <th>用户</th>
+                            <th>类型</th>
+                            <th>时间</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr v-for="(row, idx) in recordsTable.data"
                             :key="idx"
                             @click="rowClick(row, idx)"
-                            :class="currRecord && currRecord.id == row.id ? 'success' : ''"
+                            :class="currRecord && currRecord.id == row.id ? 'active' : ''"
                         >
                             <td>${(Number(recordsTable.params.page)-1) * Number(recordsTable.params.pageSize) + idx + 1}</td>
                             <td>${resourceTypeMp[row.resource_type]}</td>
                             <td>${row.resource_label}</td>
                             <td>${row.user}</td>
                             <td>${operationTypeMp[row.operation_type]}</td>
-                            <td>${row.created}</td>
+                            <td>${row.created_at}</td>
                         </tr>
                         </tbody>
                     </table>
@@ -71,23 +71,20 @@
         </div>
         <div class="col-sm-6">
             <ul v-if="currRecord" class="nav nav-tabs record-manage-nav">
-                <li :class="currAction=='info' ? 'active' : ''" @click="currAction='info'">
+                <li class="active">
                     <a href="#">信息</a>
                 </li>
             </ul>
 
-            <div v-if="currAction=='info'" class="record-manage-body">
+            <div v-if="currRecord" class="record-manage-body">
                 <table class="table table-bordered">
-                    <thead>
-                        <tr><th colspan="2">基本信息</th></tr>
-                    </thead>
                     <tbody>
-                        <tr><td style="width: 100px">操作用户</td><td>${currRecord.user}</td></tr>
-                        <tr><td>记录时间</td><td>${currRecord.created}</td></tr>
-                        <tr><td>资源类型</td><td>${resourceTypeMp[currRecord.resource_type]}</td></tr>
-                        <tr><td>资源ID</td><td>${currRecord.resource_id}</td></tr>
-                        <tr><td>操作类型</td><td>${operationTypeMp[currRecord.operation_type]}</td></tr>
-                        <tr><td>资源数据</td><td><pre id="currRecordData"></pre></td></tr>
+                        <tr><th style="width: 80px">用户</td><td>${currRecord.user}</td></tr>
+                        <tr><th>时间</th><td>${currRecord.created_at}</td></tr>
+                        <tr><th>来源</th><td>${resourceTypeMp[currRecord.resource_type]}</td></tr>
+                        <tr><th>标识</th><td>${currRecord.resource_label}</td></tr>
+                        <tr><th>类型</th><td>${operationTypeMp[currRecord.operation_type]}</td></tr>
+                        <tr><th>数据</th><td><pre id="currRecordData"></pre></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -115,7 +112,6 @@
             },
             currRecord: null,
             currRecordRowIdx: null,
-            currAction: null,
             currRecordJobsTable: {
                 data: [],
                 total: 0
@@ -124,11 +120,15 @@
             operationTypeMp: {
                 create: "创建",
                 update: "编辑",
-                delete: "删除"
+                delete: "删除",
+                add: "添加",
+                remove: "移除"
             },
             resourceTypeMp: {
-                job: "任务",
-                host: "主机"
+                host: "主机",
+                hostgroup: "主机组",
+                hostgroup_host: "主机组-主机",
+                host_crontab_job: "主机-CrontabJob",
             }
         },
 
@@ -259,6 +259,10 @@
         max-height: 290px;
         overflow: auto;
         margin-bottom: 0px;
+    }
+
+    .table {
+        font-size: 13px;
     }
 </style>
 </html>

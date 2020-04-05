@@ -4,12 +4,21 @@ import (
 	"cronnest/handlers"
 	"github.com/gin-gonic/gin"
 	"cronnest/configure"
+	"os"
+	"io"
 )
 
 
 func InitRouter() *gin.Engine {
+	f, _ := os.Create(configure.Log["request"])
+	gin.DefaultWriter = io.MultiWriter(f)
+
+
 	router := gin.Default()
+
 	router.LoadHTMLGlob("templates/*")
+
+	router.Static("/static", "./static")
 
 	authorized := router.Group("/", gin.BasicAuth(configure.Accounts))
 
@@ -17,12 +26,26 @@ func InitRouter() *gin.Engine {
 
 	apiGroup := authorized.Group("/api")
 	{
-		apiGroup.GET("/jobs/", handlers.GetJobs)
-		apiGroup.POST("/jobs/", handlers.CreateJob)
-		apiGroup.PUT("/jobs/:pk/", handlers.UpdateJob)
-		apiGroup.DELETE("/jobs/:pk/", handlers.DeleteJob)
+		apiGroup.GET("/hostgroups/:hgId/hosts/", handlers.GetHostgroupHosts)
+		apiGroup.POST("/hostgroups/:hgId/hosts/", handlers.AddHostgroupHosts)
+		apiGroup.DELETE("/hostgroups/:hgId/hosts/", handlers.RemoveHostgroupHosts)
+
+		apiGroup.GET("/hostgroups/", handlers.GetHostgroup)
+		apiGroup.POST("/hostgroups/", handlers.CreateHostgroup)
+		apiGroup.PUT("/hostgroups/:hgId/", handlers.UpdateHostgroup)
+		apiGroup.DELETE("/hostgroups/:hgId/", handlers.DeleteHostgroup)
+
+
+		apiGroup.GET("/hosts/:hId/crontab/", handlers.GetHostCrontab)
+		apiGroup.POST("/hosts/:hId/crontab/job/", handlers.CreateHostCrontabJob)
+		apiGroup.PUT("/hosts/:hId/crontab/job/", handlers.UpdateHostCrontabJob)
+		apiGroup.DELETE("/hosts/:hId/crontab/job/", handlers.DeleteHostCrontabJob)
+
 		apiGroup.GET("/hosts/", handlers.GetHosts)
-		apiGroup.GET("/host_jobs/", handlers.GetHostJobs)
+		apiGroup.PUT("/hosts/:hId/", handlers.UpdateHost)
+		apiGroup.DELETE("/hosts/:hId/", handlers.DeleteHost)
+
+
 		apiGroup.GET("/operation_records/", handlers.GetOperationRecords)
 	}
 

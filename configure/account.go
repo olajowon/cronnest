@@ -4,6 +4,7 @@ var Accounts map[string]string
 
 func init() {
 	Accounts = map[string]string {
-		"admin": "admin",
+		"admin": "admin",	// 用户名: 密码
+		"guest": "guest123",
 	}
 }

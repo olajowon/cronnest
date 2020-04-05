@@ -1,0 +1,47 @@
+{{define "createCrontabJobModal"}}
+<div class="modal fade" id="createJobModal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">创建Job</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label>启用 *</label>
+                        <div>
+                            <label class="radio-inline">
+                                <input type="radio" v-model="createJobData.job.enabled" :value="true" checked> 是
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" v-model="createJobData.job.enabled" :value="false"> 否
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>调度 *</label>
+                        <input type="text" v-model="createJobData.job.slices" class="form-control"  placeholder="* * * * *">
+                    </div>
+                    <div v-if="createJobData.tab=='system'" class="form-group">
+                        <label>用户 *</label>
+                        <input type="text" v-model="createJobData.job.user" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>命令 *</label>
+                        <input type="text" v-model="createJobData.job.command" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>备注 *</label>
+                        <input type="text" v-model="createJobData.job.comment" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" @click="submitCreateJob(createJobData)">提交</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

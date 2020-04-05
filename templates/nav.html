@@ -1,5 +1,5 @@
 {{define "nav"}}
-<nav class="navbar navbar-default">
+<nav class="navbar navbar-inverse" style="border-top: 0px">
     <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
@@ -7,15 +7,28 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Cronnest</a>
+            <a class="navbar-brand" href="#" style="padding: 6px 40px 0px 10px">
+                <span><img src="/static/img/title-logo.png" style="height: 38px"></span>
+                <span style="
+                    vertical-align:-3px;
+                    font-size: 18px;
+                    color: #fff;
+                    font-family: 'Lucida Sans Unicode', 'Lucida Grande', sans-serif"
+                >Cronnest</span>
+            </a>
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
-                <li :class="pageName=='job' ? 'active' : ''"><a href="/html/jobs/">计划任务</a></li>
-                <li :class="pageName=='host' ? 'active' : ''"><a href="/html/hosts/">主机视图</a></li>
+                <li :class="pageName=='crontab' ? 'active' : ''"><a href="/html/crontab/">Crontab</a></li>
                 <li :class="pageName=='operationRecord' ? 'active' : ''"><a href="/html/operation_records/">操作记录</a></li>
+            </ul>
 
-                <li style="float: right"><a href="#">{{ .user }}</a></li>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-user"></i> {{ .user }}
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
