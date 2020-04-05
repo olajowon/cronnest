@@ -19,7 +19,7 @@ Cronnest 是一个对Linux Crontab任务进行统一管理的平台工具，通�
 ### 组件
 GO	1.3	
 
-Gin 
+Gin 1.4
 
 PgSQL 1.11 （没错不是MySQL、也不是NoSQL）
 
