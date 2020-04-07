@@ -5,7 +5,6 @@ CREATE TABLE hostgroup (
     updated_at timestamp with time zone
 );
 
-CREATE UNIQUE INDEX hostgroup_pkey ON hostgroup(id int4_ops);
 
 CREATE TABLE host (
     id SERIAL PRIMARY KEY,
@@ -15,8 +14,6 @@ CREATE TABLE host (
     status text NOT NULL DEFAULT 'enabled'::text
 );
 
-CREATE UNIQUE INDEX host_pkey ON host(id int4_ops);
-CREATE UNIQUE INDEX host_address_key ON host(address text_ops);
 
 CREATE TABLE hostgroup_host (
     hostgroup_id integer,
@@ -34,7 +31,6 @@ CREATE TABLE host_crontab (
     last_succeed timestamp with time zone
 );
 
-CREATE UNIQUE INDEX host_crontab_pkey ON host_crontab(id int4_ops);
 
 CREATE TABLE operation_record (
     id SERIAL PRIMARY KEY,
@@ -47,4 +43,3 @@ CREATE TABLE operation_record (
     source_label text
 );
 
-CREATE UNIQUE INDEX operation_record_pkey ON operation_record(id int4_ops);
