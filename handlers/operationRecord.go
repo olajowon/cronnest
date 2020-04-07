@@ -21,12 +21,12 @@ func GetOperationRecords(c *gin.Context) {
 	var count int64
 	if search != "" {
 		search = fmt.Sprintf("%%%v%%", search)
-		db.DB.Table("operation_records").Where("resource_label LIKE ?", search).Count(&count)
-		db.DB.Table("operation_records").Where("resource_label LIKE ?", search).
+		db.DB.Table("operation_record").Where("resource_label LIKE ?", search).Count(&count)
+		db.DB.Table("operation_record").Where("resource_label LIKE ?", search).
 			Limit(limit).Offset(offset).Order("-id").Find(&operationRecords)
 	} else {
-		db.DB.Table("operation_records").Count(&count)
-		db.DB.Table("operation_records").
+		db.DB.Table("operation_record").Count(&count)
+		db.DB.Table("operation_record").
 			Limit(limit).Offset(offset).Order("-id").Find(&operationRecords)
 	}
 

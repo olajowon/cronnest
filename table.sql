@@ -1,5 +1,5 @@
 CREATE TABLE hostgroup (
-    id integer DEFAULT nextval('hostgroups_id_seq'::regclass) PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name text,
     created_at timestamp with time zone,
     updated_at timestamp with time zone
@@ -36,8 +36,8 @@ CREATE TABLE host_crontab (
 
 CREATE UNIQUE INDEX host_crontab_pkey ON host_crontab(id int4_ops);
 
-CREATE TABLE operation_records (
-    id integer DEFAULT nextval('operation_record_id_seq'::regclass) PRIMARY KEY,
+CREATE TABLE operation_record (
+    id SERIAL PRIMARY KEY,
     source_type text,
     source_id integer,
     operation_type text,
@@ -47,4 +47,4 @@ CREATE TABLE operation_records (
     source_label text
 );
 
-CREATE UNIQUE INDEX operation_record_pkey ON operation_records(id int4_ops);
+CREATE UNIQUE INDEX operation_record_pkey ON operation_record(id int4_ops);

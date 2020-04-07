@@ -61,7 +61,7 @@ func UpdateHost(c *gin.Context) {
 
 	var addressCount int64
 	db.DB.Table("host").Where(
-		"name=? AND id!=?", reqData.Address, hId).Count(&addressCount)
+		"address=? AND id!=?", reqData.Address, hId).Count(&addressCount)
 	if addressCount > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("主机地址[%s]已存在", reqData.Address)})
 		return
@@ -84,7 +84,7 @@ func UpdateHost(c *gin.Context) {
 	jsonData, _ := json.Marshal(map[string]interface{}{"updated_host": hostData})
 	operRecord := models.OperationRecord{SourceType:"host", SourceId:hostMdl.Id, SourceLabel: hostMdl.Address,
 		OperationType: "update", Data:jsonData, User: user, CreatedAt: time.Now()}
-	if result = transaction.Create(&operRecord); result.Error != nil {
+	if result = transaction.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 		lg.Logger.Error(msg)
@@ -140,7 +140,7 @@ func DeleteHost(c *gin.Context) {
 	recordData, _ := json.Marshal(map[string]interface{}{"deleted_host": hostData})
 	operRecord := models.OperationRecord{SourceType:"host", SourceId:hostMdl.Id, SourceLabel: hostMdl.Address,
 		OperationType: "delete", Data:recordData, User: user, CreatedAt: time.Now()}
-	if result = transaction.Create(&operRecord); result.Error != nil {
+	if result = transaction.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 		lg.Logger.Error(msg)

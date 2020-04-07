@@ -75,7 +75,7 @@ func CreateHostgroup(c *gin.Context) {
 	recordData, _ := json.Marshal(map[string]interface{}{"created_hostgroup": data})
 	operRecord := models.OperationRecord{SourceType: "hostgroup", SourceId: hostgroupMdl.Id,
 		SourceLabel: hostgroupMdl.Name, OperationType: "create", Data: recordData, User: user, CreatedAt: time.Now()}
-	if result = transaction.Create(&operRecord); result.Error != nil {
+	if result = transaction.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 		lg.Logger.Error(msg)
@@ -128,7 +128,7 @@ func UpdateHostgroup(c *gin.Context) {
 	recordData, _ := json.Marshal(map[string]interface{}{"updated_hostgroup": data})
 	operRecord := models.OperationRecord{SourceType: "hostgroup", SourceId: hostgroupMdl.Id,
 		SourceLabel: hostgroupMdl.Name, OperationType: "update", Data: recordData, User: user, CreatedAt: time.Now()}
-	if result := transaction.Create(&operRecord); result.Error != nil {
+	if result := transaction.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 		lg.Logger.Error(msg)
@@ -228,7 +228,7 @@ func DeleteHostgroup(c *gin.Context) {
 		"deleted_hostgroup": hgData, "removed_hosts": removedHostData, "deleted_hosts": deletedHostData})
 	operRecord := models.OperationRecord{SourceType: "hostgroup", SourceId: hostgroupMdl.Id,
 		SourceLabel: hostgroupMdl.Name, OperationType: "delete", Data: recordData, User: user, CreatedAt: time.Now()}
-	if result := transaction.Create(&operRecord); result.Error != nil {
+	if result := transaction.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 		lg.Logger.Error(msg)

@@ -117,7 +117,7 @@ func AddHostgroupHosts(c *gin.Context) {
 	operRecord := models.OperationRecord{SourceType: "hostgroup_host", SourceId: hostgroupMdl.Id,
 		SourceLabel: hostgroupMdl.Name, OperationType: "add", Data: recordData,
 		User: user, CreatedAt: time.Now()}
-	if result := transaction.Create(&operRecord); result.Error != nil {
+	if result := transaction.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 		lg.Logger.Error(msg)
@@ -217,7 +217,7 @@ func RemoveHostgroupHosts(c *gin.Context) {
 	operRecord := models.OperationRecord{SourceType: "hostgroup_host", SourceId: hostgroupMdl.Id,
 		SourceLabel: hostgroupMdl.Name, OperationType: "remove", Data: recordData,
 		User: user, CreatedAt: time.Now()}
-	if result := transaction.Create(&operRecord); result.Error != nil {
+	if result := transaction.Table("operation_record").Create(&operRecord); result.Error != nil {
 		transaction.Rollback()
 		msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 		lg.Logger.Error(msg)

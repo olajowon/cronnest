@@ -48,7 +48,7 @@ func CreateHostCrontabJob(c *gin.Context) {
 		recordData, _ := json.Marshal(map[string]interface{}{"created_job": created})
 		operRecord := models.OperationRecord{SourceType:"host_crontab_job", SourceId:hostMdl.Id,
 			SourceLabel: hostMdl.Address, OperationType: "create", Data:recordData, User: user, CreatedAt: time.Now()}
-		if result := db.DB.Create(&operRecord); result.Error != nil {
+		if result := db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 			msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 			lg.Logger.Error(msg)
 			c.JSON(http.StatusInternalServerError,
@@ -92,7 +92,7 @@ func UpdateHostCrontabJob(c *gin.Context) {
 		recordData, _ := json.Marshal(map[string]interface{}{"updated_job": updated})
 		operRecord := models.OperationRecord{SourceType:"host_crontab_job", SourceId:hostMdl.Id,
 			SourceLabel: hostMdl.Address, OperationType: "update", Data:recordData, User: user, CreatedAt: time.Now()}
-		if result := db.DB.Create(&operRecord); result.Error != nil {
+		if result := db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 			msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 			lg.Logger.Error(msg)
 			c.JSON(http.StatusInternalServerError,
@@ -139,7 +139,7 @@ func DeleteHostCrontabJob(c *gin.Context) {
 		operRecord := models.OperationRecord{SourceType:"host_crontab_job", SourceId:hostMdl.Id,
 			SourceLabel: hostMdl.Address, OperationType: "delete",
 			Data:recordData, User: user, CreatedAt: time.Now()}
-		if result := db.DB.Create(&operRecord); result.Error != nil {
+		if result := db.DB.Table("operation_record").Create(&operRecord); result.Error != nil {
 			msg := fmt.Sprintf("记录操作失败, %v", result.Error)
 			lg.Logger.Error(msg)
 			c.JSON(http.StatusInternalServerError,
