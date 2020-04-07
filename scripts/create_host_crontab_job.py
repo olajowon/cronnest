@@ -1345,6 +1345,7 @@ def main():
     job.enable(new_job['enabled'])
     cron.write()
 
+    new_job['row'] = len(cron) - 1
     print(json.dumps(dict(tab=tab, job=new_job)))
 
 if __name__ == '__main__':

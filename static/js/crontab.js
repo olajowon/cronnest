@@ -177,7 +177,7 @@ new Vue({
             axios.post("/api/hosts/"+ hostId +"/crontab/job/", data)
                 .then(function(resp){
                     if (_this.currHost.id = createJobData.host_id) {
-                        _this.currHost.crontab.tab[createJobData.tab].push(createJobData.job)
+                        _this.currHost.crontab.tab[createJobData.tab].push(resp.data.data.created.job);
                     }
                     _this.locking = null;
                     toastr.success("创建成功")

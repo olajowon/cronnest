@@ -38,7 +38,7 @@ CREATE TABLE operation_record (
     source_id integer,
     operation_type text,
     data jsonb DEFAULT '{}'::jsonb,
-    user text,
+    "user" text,
     created_at timestamp with time zone NOT NULL,
     source_label text
 );
