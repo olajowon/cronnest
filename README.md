@@ -21,7 +21,7 @@ GO	1.3
 
 Gin 1.4
 
-PgSQL 1.11 （没错不是MySQL、也不是NoSQL）
+PgSQL 11 （没错不是MySQL、也不是NoSQL）
 
 VUE	 2.2 （但这不是一个前后端分离项目）
 
